@@ -1,0 +1,25 @@
+{
+  "name": "thunderbird-subscriptions-hub",
+  "version": "1.0.0",
+  "description": "Extension Thunderbird pour centraliser et gérer tous vos abonnements et newsletters sur l'ensemble de vos adresses.",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview"
+  },
+  "keywords": [
+    "thunderbird",
+    "webextension",
+    "newsletter",
+    "subscriptions",
+    "cleaner",
+    "unsubscribe"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "typescript": "^5.7.3",
+    "vite": "^6.2.0"
+  }
+}

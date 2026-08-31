@@ -1,0 +1,38 @@
+{
+  "manifest_version": 3,
+  "name": "Subscriptions Hub",
+  "version": "1.0.0",
+  "description": "Centralisez, analysez et gérez vos abonnements et newsletters sur tous vos comptes Thunderbird.",
+  "author": "Subscriptions Hub",
+  "permissions": [
+    "accountsRead",
+    "messagesRead",
+    "messagesModifyPermanent",
+    "messagesMove",
+    "storage",
+    "tabs",
+    "menus"
+  ],
+  "background": {
+    "page": "background.html"
+  },
+  "action": {
+    "default_title": "Ouvrir Subscriptions Hub",
+    "default_icon": {
+      "32": "icons/icon-32.svg",
+      "64": "icons/icon-64.svg"
+    }
+  },
+  "icons": {
+    "32": "icons/icon-32.svg",
+    "48": "icons/icon-48.svg",
+    "64": "icons/icon-64.svg",
+    "128": "icons/icon-128.svg"
+  },
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "subscriptions-hub@local",
+      "strict_min_version": "115.0"
+    }
+  }
+}
