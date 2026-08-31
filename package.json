@@ -1,5 +1,6 @@
 {
   "name": "thunderbird-subscriptions-hub",
+  "version": "0.1.0",
   "description": "Extension Thunderbird pour centraliser et gérer tous vos abonnements et newsletters sur l'ensemble de vos adresses.",
   "type": "module",
   "scripts": {
