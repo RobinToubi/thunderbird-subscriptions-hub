@@ -75,7 +75,6 @@ jobs:
           apiUrlPrefix: https://addons.thunderbird.net/api/v4
           apiKey: ${{ secrets.ATN_SIGN_KEY }}
           apiSecret: ${{ secrets.ATN_SIGN_SECRET }}
-          releaseNotes: Release ${{ github.ref_name }}
           timeout: 900000
 
       - name: Create GitHub Release and attach signed XPI
