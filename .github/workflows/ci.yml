@@ -1,0 +1,55 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build:
+    name: Build & validate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # Version comes from the "packageManager" field in package.json.
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run unit tests
+        run: pnpm test
+
+      - name: Type-check & build
+        run: pnpm build
+
+      - name: web-ext lint
+        uses: kewisch/action-web-ext@v2
+        with:
+          cmd: lint
+          source: dist
+          channel: listed
+
+      - name: Validate a signed package builds (unlisted)
+        uses: kewisch/action-web-ext@v2
+        with:
+          cmd: build
+          source: dist
+        id: web-ext-build
+
+      - name: Upload built package artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: subscriptions-hub-xpi
+          path: ${{ steps.web-ext-build.outputs.target }}
+          if-no-files-found: error
+          retention-days: 14

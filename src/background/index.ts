@@ -1,6 +1,7 @@
 import { ParserService } from '../services/parserService';
 import { ScannerService } from '../services/scannerService';
 import { StorageService } from '../services/storageService';
+import { SubscriptionService } from '../services/subscriptionService';
 import { UnsubscribeService } from '../services/unsubscribeService';
 
 console.log('[Subscriptions Hub] Background script initialized.');
@@ -146,45 +147,28 @@ if (typeof browser !== 'undefined' && browser?.messages?.onNewMailReceived) {
           const { name: senderName, email: senderEmail, domain: senderDomain } = ParserService.parseAuthor(msg.author);
           if (senderEmail && !settings.ignoredDomains.includes(senderDomain)) {
             const accountId = folder.accountId || 'default';
-            const subId = ParserService.generateSubscriptionId(accountId, senderEmail, detection.listId);
-            const bestMethod = ParserService.getBestUnsubscribeMethod(detection.unsubscribeMethods);
 
-            if (!subscriptions[subId]) {
-              subscriptions[subId] = {
-                id: subId,
+            // Shared with ScannerService so counters and the derived frequency stay consistent
+            // between a full scan and this incremental path.
+            SubscriptionService.upsertFromMessage(
+              subscriptions,
+              {
                 accountId,
                 accountName: `Account ${accountId}`,
-                accountEmail: senderEmail,
-                senderName: senderName || senderEmail,
+                accountEmail: senderEmail
+              },
+              {
+                messageId: msg.id,
+                subject: msg.subject || '',
+                senderName,
                 senderEmail,
                 senderDomain,
                 listId: detection.listId,
-                category: 'newsletter',
-                totalMessages: 1,
-                unreadMessages: 1,
-                firstReceivedAt: Date.now(),
-                lastReceivedAt: Date.now(),
-                frequencyEstimate: 'occasional',
-                recentSubjects: msg.subject ? [msg.subject] : [],
-                recentMessageIds: [msg.id],
-                unsubscribeMethods: detection.unsubscribeMethods,
-                primaryUnsubscribeMethod: bestMethod,
-                status: 'active',
-                tags: []
-              };
-            } else {
-              const sub = subscriptions[subId];
-              sub.totalMessages += 1;
-              sub.unreadMessages += 1;
-              sub.lastReceivedAt = Date.now();
-              if (msg.subject && !sub.recentSubjects.includes(msg.subject)) {
-                sub.recentSubjects.unshift(msg.subject);
-                if (sub.recentSubjects.length > 5) sub.recentSubjects.pop();
+                receivedAt: Date.now(),
+                isRead: false,
+                unsubscribeMethods: detection.unsubscribeMethods
               }
-              if (!sub.recentMessageIds.includes(msg.id)) {
-                sub.recentMessageIds.push(msg.id);
-              }
-            }
+            );
           }
         }
 

@@ -2,8 +2,8 @@
   "manifest_version": 3,
   "name": "Subscriptions Hub",
   "version": "1.0.0",
-  "description": "Centralisez, analysez et gérez vos abonnements et newsletters sur tous vos comptes Thunderbird.",
-  "author": "Subscriptions Hub",
+  "description": "Centralize, analyze and manage all your subscriptions and newsletters across every Thunderbird email account.",
+  "author": "Robin Toubi",
   "permissions": [
     "accountsRead",
     "messagesRead",
@@ -31,7 +31,7 @@
   },
   "browser_specific_settings": {
     "gecko": {
-      "id": "subscriptions-hub@local",
+      "id": "subscriptions-hub@robin-toubi.github.io",
       "strict_min_version": "115.0"
     }
   }

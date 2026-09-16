@@ -294,24 +294,42 @@ export class ParserService {
   }
 
   /**
+   * Estimates the reception frequency from the reception window of a subscription.
+   *
+   * A subscription only stores `firstReceivedAt` / `lastReceivedAt` / `totalMessages`
+   * (never the full timestamp list), so this is the variant the scan actually uses.
+   * The average interval between two consecutive messages is the span divided by the
+   * number of gaps, which is exactly what `estimateFrequency` computes from a full list.
+   */
+  static estimateFrequencyFromRange(
+    firstReceivedAt: number,
+    lastReceivedAt: number,
+    totalMessages: number
+  ): FrequencyEstimate {
+    // A single message gives no interval to measure: the frequency stays unknown.
+    if (totalMessages <= 1) return 'occasional';
+    if (!Number.isFinite(firstReceivedAt) || !Number.isFinite(lastReceivedAt)) return 'occasional';
+
+    // An inverted window means the stored data is inconsistent: claim nothing.
+    if (lastReceivedAt < firstReceivedAt) return 'occasional';
+
+    const spanMs = lastReceivedAt - firstReceivedAt;
+    const avgIntervalDays = (spanMs / (totalMessages - 1)) / (1000 * 60 * 60 * 24);
+
+    if (avgIntervalDays <= 2) return 'daily';
+    if (avgIntervalDays <= 10) return 'weekly';
+    if (avgIntervalDays <= 45) return 'monthly';
+    return 'occasional';
+  }
+
+  /**
    * Estimates the reception frequency based on the timestamps
    */
   static estimateFrequency(timestamps: number[]): FrequencyEstimate {
     if (timestamps.length <= 1) return 'occasional';
 
     const sorted = [...timestamps].sort((a, b) => a - b);
-    const intervals: number[] = [];
-
-    for (let i = 1; i < sorted.length; i++) {
-      intervals.push(sorted[i] - sorted[i - 1]);
-    }
-
-    const avgIntervalDays = (intervals.reduce((a, b) => a + b, 0) / intervals.length) / (1000 * 60 * 60 * 24);
-
-    if (avgIntervalDays <= 2) return 'daily';
-    if (avgIntervalDays <= 10) return 'weekly';
-    if (avgIntervalDays <= 45) return 'monthly';
-    return 'occasional';
+    return this.estimateFrequencyFromRange(sorted[0], sorted[sorted.length - 1], sorted.length);
   }
 
   /**

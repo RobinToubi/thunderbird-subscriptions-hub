@@ -1,0 +1,93 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+jobs:
+  publish:
+    name: Build, sign & publish to addons.thunderbird.net (ATN)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # Version comes from the "packageManager" field in package.json.
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Check tag matches package & manifest version
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          PKG_VERSION=$(node -p "require('./package.json').version")
+          MANIFEST_VERSION=$(node -p "require('./public/manifest.json').version")
+          echo "Tag:      $VERSION"
+          echo "package:  $PKG_VERSION"
+          echo "manifest: $MANIFEST_VERSION"
+          if [ "$VERSION" != "$PKG_VERSION" ] || [ "$VERSION" != "$MANIFEST_VERSION" ]; then
+            echo "::error::Version mismatch! Tag is v$VERSION but package.json is $PKG_VERSION and manifest is $MANIFEST_VERSION. Use 'pnpm release' to cut releases."
+            exit 1
+          fi
+
+      - name: Run unit tests
+        run: pnpm test
+
+      - name: Type-check & build
+        run: pnpm build
+
+      - name: web-ext lint
+        uses: kewisch/action-web-ext@v2
+        with:
+          cmd: lint
+          source: dist
+          channel: listed
+
+      - name: web-ext build
+        id: web-ext-build
+        uses: kewisch/action-web-ext@v2
+        with:
+          cmd: build
+          source: dist
+
+      - name: Collect source code archive (source-code submission policy)
+        run: git archive --format=zip --output=sources.zip "$GITHUB_SHA"
+
+      - name: web-ext sign & submit to Thunderbird (ATN, listed)
+        id: web-ext-sign
+        uses: kewisch/action-web-ext@v2
+        with:
+          cmd: sign
+          source: ${{ steps.web-ext-build.outputs.target }}
+          sourceCode: sources.zip
+          channel: listed
+          apiUrlPrefix: https://addons.thunderbird.net/api/v4
+          apiKey: ${{ secrets.ATN_SIGN_KEY }}
+          apiSecret: ${{ secrets.ATN_SIGN_SECRET }}
+          releaseNotes: Release ${{ github.ref_name }}
+          timeout: 900000
+
+      - name: Create GitHub Release and attach signed XPI
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
+            gh release upload "$GITHUB_REF_NAME" "${{ steps.web-ext-sign.outputs.target }}" --clobber
+          else
+            gh release create "$GITHUB_REF_NAME" \
+              --target "$GITHUB_SHA" \
+              --title "${{ github.ref_name }}" \
+              --generate-notes \
+              "${{ steps.web-ext-sign.outputs.target }}"
+          fi
