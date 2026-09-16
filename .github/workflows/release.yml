@@ -61,6 +61,9 @@ jobs:
           cmd: build
           source: dist
 
+      # ATN is on API v4, which cannot accept a source archive alongside the upload.
+      # We still build one and attach it to the GitHub Release, so it is always at hand
+      # for the manual source-code submission ATN asks for (the add-on ships compiled TS).
       - name: Collect source code archive (source-code submission policy)
         run: git archive --format=zip --output=sources.zip "$GITHUB_SHA"
 
@@ -70,7 +73,6 @@ jobs:
         with:
           cmd: sign
           source: ${{ steps.web-ext-build.outputs.target }}
-          sourceCode: sources.zip
           channel: listed
           apiUrlPrefix: https://addons.thunderbird.net/api/v4
           apiKey: ${{ secrets.ATN_SIGN_KEY }}
@@ -82,11 +84,12 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
-            gh release upload "$GITHUB_REF_NAME" "${{ steps.web-ext-sign.outputs.target }}" --clobber
+            gh release upload "$GITHUB_REF_NAME" "${{ steps.web-ext-sign.outputs.target }}" sources.zip --clobber
           else
             gh release create "$GITHUB_REF_NAME" \
               --target "$GITHUB_SHA" \
               --title "${{ github.ref_name }}" \
               --generate-notes \
-              "${{ steps.web-ext-sign.outputs.target }}"
+              "${{ steps.web-ext-sign.outputs.target }}" \
+              sources.zip
           fi
