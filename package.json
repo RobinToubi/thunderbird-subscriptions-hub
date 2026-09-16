@@ -18,6 +18,9 @@
   ],
   "author": "",
   "license": "MIT",
+  "engines": {
+    "node": ">=24"
+  },
   "devDependencies": {
     "typescript": "^5.7.3",
     "vite": "^6.2.0"
