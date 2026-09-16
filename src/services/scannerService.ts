@@ -3,6 +3,7 @@ import { AccountService } from './accountService';
 import { LoggerService } from './loggerService';
 import { ParserService } from './parserService';
 import { StorageService } from './storageService';
+import { SubscriptionService } from './subscriptionService';
 
 export type ProgressCallback = (progress: ScanProgress) => void;
 
@@ -244,53 +245,24 @@ export class ScannerService {
               );
               
               if (senderEmail && !isSelfSent && !settings.ignoredDomains.includes(senderDomain)) {
-                const subId = ParserService.generateSubscriptionId(accountId, senderEmail, detection.listId);
-                const bestMethod = ParserService.getBestUnsubscribeMethod(detection.unsubscribeMethods);
-
-                if (!subscriptionsMap[subId]) {
-                  LoggerService.success(`🎯 Subscription identified: "${senderName}" <${senderEmail}>`);
-                  subscriptionsMap[subId] = {
-                    id: subId,
-                    accountId,
-                    accountName,
-                    accountEmail,
-                    senderName: senderName || senderEmail,
+                const { subscription, created } = SubscriptionService.upsertFromMessage(
+                  subscriptionsMap,
+                  { accountId, accountName, accountEmail },
+                  {
+                    messageId: msgId,
+                    subject,
+                    senderName,
                     senderEmail,
                     senderDomain,
                     listId: detection.listId,
-                    category: 'newsletter',
-                    totalMessages: 1,
-                    unreadMessages: isRead ? 0 : 1,
-                    firstReceivedAt: receivedDate,
-                    lastReceivedAt: receivedDate,
-                    frequencyEstimate: 'occasional',
-                    recentSubjects: subject ? [subject] : [],
-                    recentMessageIds: [msgId],
-                    unsubscribeMethods: detection.unsubscribeMethods,
-                    primaryUnsubscribeMethod: bestMethod,
-                    status: 'active',
-                    tags: []
-                  };
-                } else {
-                  const sub = subscriptionsMap[subId];
-                  sub.totalMessages += 1;
-                  if (!isRead) sub.unreadMessages += 1;
-                  if (receivedDate < sub.firstReceivedAt) sub.firstReceivedAt = receivedDate;
-                  if (receivedDate > sub.lastReceivedAt) sub.lastReceivedAt = receivedDate;
-
-                  if (subject && !sub.recentSubjects.includes(subject)) {
-                    sub.recentSubjects.unshift(subject);
-                    if (sub.recentSubjects.length > 5) sub.recentSubjects.pop();
+                    receivedAt: receivedDate,
+                    isRead,
+                    unsubscribeMethods: detection.unsubscribeMethods
                   }
+                );
 
-                  if (!sub.recentMessageIds.includes(msgId)) {
-                    sub.recentMessageIds.push(msgId);
-                  }
-
-                  if (detection.unsubscribeMethods.length > 0 && (!sub.unsubscribeMethods || sub.unsubscribeMethods.length === 0)) {
-                    sub.unsubscribeMethods = detection.unsubscribeMethods;
-                    sub.primaryUnsubscribeMethod = bestMethod;
-                  }
+                if (created) {
+                  LoggerService.success(`\u{1F3AF} Subscription identified: "${subscription.senderName}" <${subscription.senderEmail}>`);
                 }
               }
             }
