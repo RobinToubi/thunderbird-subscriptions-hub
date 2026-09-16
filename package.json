@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "Thunderbird Extension to centralize and manage all your subscriptions and newsletters on the entire set of your addresses.",
   "type": "module",
+  "packageManager": "pnpm@11.24.0",
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
