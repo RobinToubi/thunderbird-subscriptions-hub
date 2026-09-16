@@ -74,6 +74,19 @@ The generated files will be placed in the `dist/` directory.
 
 ---
 
+## ⚙️ CI / CD & Publishing (addons.thunderbird.net)
+
+- **CI** (`.github/workflows/ci.yml`) runs on every push / PR: installs deps, type-checks, builds and
+  lints the extension, and uploads a signed test package as an artifact.
+- **Release** (`.github/workflows/release.yml`) triggers when you publish a **GitHub Release**: it builds,
+  signs and submits the new version to **addons.thunderbird.net** (listed channel), then attaches the
+  signed package to the release.
+
+To cut a release, bump the version in `public/manifest.json` (the **single source of truth**), tag it
+`v<version>`, and create a GitHub Release. Full instructions in **`RELEASE.md`**.
+
+---
+
 ## 📦 Temporary loading in Mozilla Thunderbird
 
 1. Open **Mozilla Thunderbird** (version 115+ or 128+ ESR).
