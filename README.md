@@ -55,7 +55,7 @@
 ## 🚀 Installation & Development
 
 ### 1. Prerequisites
-- Node.js (v20+)
+- Node.js (v24+, current LTS)
 - `pnpm`
 
 ### 2. Quick UI preview (Browser demo)
