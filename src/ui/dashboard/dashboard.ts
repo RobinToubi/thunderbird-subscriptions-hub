@@ -751,7 +751,10 @@ class DashboardController {
   private escapeHtml(str: string): string {
     const div = document.createElement('div');
     div.textContent = str || '';
-    return div.innerHTML;
+    // Serialising a text node escapes &, < and > but leaves quotes untouched, which is
+    // not enough here: subjects and sender names are also interpolated into attributes
+    // (title="..."), where a quote in the value would break out and inject attributes.
+    return div.innerHTML.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
   }
 
   /**
