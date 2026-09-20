@@ -32,7 +32,7 @@
   "browser_specific_settings": {
     "gecko": {
       "id": "subscriptions-hub@robin-toubi.github.io",
-      "strict_min_version": "115.0"
+      "strict_min_version": "128.0"
     }
   }
 }

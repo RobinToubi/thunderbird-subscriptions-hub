@@ -26,7 +26,7 @@
 
 ```text
 ├── public/
-│   ├── manifest.json         # Manifest V3 for Thunderbird 115/128+
+│   ├── manifest.json         # Manifest V3 for Thunderbird 128+
 │   └── icons/                # SVG vector icons (32, 48, 64, 128px)
 ├── src/
 │   ├── types/
@@ -89,7 +89,7 @@ To cut a release, bump the version in `public/manifest.json` (the **single sourc
 
 ## 📦 Temporary loading in Mozilla Thunderbird
 
-1. Open **Mozilla Thunderbird** (version 115+ or 128+ ESR).
+1. Open **Mozilla Thunderbird** (version 128 ESR or later).
 2. Open the **Tools** > **Add-ons and Themes** menu (or press `Ctrl+Shift+A` / `Cmd+Shift+A`).
 3. Click the gear icon (⚙️) at the top right and choose **Debug Add-ons**.
 4. Click **Load Temporary Add-on...**.
