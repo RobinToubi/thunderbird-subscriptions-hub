@@ -1,0 +1,183 @@
+/**
+ * Settings page, rendered inline by Thunderbird's Add-ons Manager.
+ *
+ * The frame it lives in is narrow and already has its own surface, so the page
+ * stays background-flush, single-column and borderless — it is meant to read as
+ * part of the Add-ons Manager, not as an embedded web page.
+ */
+
+@import '../shared/tokens.css';
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-family);
+  font-size: var(--font-size-base);
+  line-height: 1.5;
+  color: var(--text-primary);
+  background-color: var(--layout-background-0);
+}
+
+.options-page {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  max-width: 640px;
+  padding: 16px 4px 24px;
+}
+
+.option-group {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.option-group-title {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.option-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.option-row-inline {
+  flex-direction: row;
+  align-items: start;
+  gap: 10px;
+}
+
+.option-row-inline .option-text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.option-label {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.option-row-inline .option-label {
+  font-weight: 400;
+}
+
+.option-description {
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+  max-width: 56ch;
+}
+
+/* Form controls: Thunderbird's are flat, 3px-radius and accent-focused. */
+input[type='checkbox'] {
+  accent-color: var(--selected-item-color);
+  width: 16px;
+  height: 16px;
+  margin-top: 3px;
+  flex-shrink: 0;
+}
+
+input[type='number'],
+select,
+textarea {
+  font: inherit;
+  color: var(--text-primary);
+  background-color: var(--layout-background-0);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--button-border-radius);
+  padding: 6px 8px;
+  min-height: var(--button-min-height);
+}
+
+input[type='number'],
+select {
+  max-width: 220px;
+}
+
+textarea {
+  resize: vertical;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.8125rem;
+  min-height: 84px;
+}
+
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+button:focus-visible {
+  outline: 2px solid var(--selected-item-color);
+  outline-offset: 1px;
+}
+
+/* Buttons */
+.btn {
+  font: inherit;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: var(--button-min-height);
+  padding: var(--button-padding);
+  border: none;
+  border-radius: var(--button-border-radius);
+  background-color: var(--button-background-color);
+  color: var(--button-text-color);
+  cursor: pointer;
+  transition: background-color var(--transition-fast);
+}
+
+.btn:hover {
+  background-color: var(--button-hover-background-color);
+}
+
+.btn-destructive {
+  background-color: var(--button-destructive-background-color);
+  color: var(--button-destructive-text-color);
+}
+
+.btn-destructive:hover {
+  background-color: var(--button-destructive-hover-background-color);
+}
+
+.option-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.reset-confirm {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.reset-question {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--danger-color);
+}
+
+.options-status {
+  min-height: 1.25rem;
+  font-size: 0.8125rem;
+  color: var(--success-color);
+}
+
+.hidden {
+  display: none !important;
+}

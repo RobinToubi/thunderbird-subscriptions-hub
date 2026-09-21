@@ -23,6 +23,10 @@
       "64": "icons/icon-64.svg"
     }
   },
+  "options_ui": {
+    "page": "options.html",
+    "open_in_tab": false
+  },
   "icons": {
     "32": "icons/icon-32.svg",
     "48": "icons/icon-48.svg",
