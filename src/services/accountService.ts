@@ -166,21 +166,12 @@ export class AccountService {
   }
 
   /**
-   * Demo accounts for Vite demo mode
+   * Demo accounts for `pnpm dev`. The fixtures live behind `import.meta.env.DEV`
+   * so they are stripped from the add-on Thunderbird actually installs.
    */
-  private static getMockAccounts(): MailAccountInfo[] {
-    return [
-      {
-        id: 'acc-perso',
-        name: 'Personal (Gmail)',
-        type: 'imap',
-        identities: [{ name: 'Robin G.', email: 'gimenez.robin11@gmail.com' }],
-        folders: [
-          { accountId: 'acc-perso', path: '/INBOX', name: 'Inbox', type: 'inbox' },
-          { accountId: 'acc-perso', path: '/[Gmail]/All Mail', name: 'All Mail', type: 'archives' },
-          { accountId: 'acc-perso', path: '/Newsletters', name: 'Newsletters', type: 'user' }
-        ]
-      }
-    ];
+  private static async getMockAccounts(): Promise<MailAccountInfo[]> {
+    if (!import.meta.env.DEV) return [];
+    const { DEMO_ACCOUNTS } = await import('../dev/fixtures');
+    return DEMO_ACCOUNTS;
   }
 }
