@@ -24,27 +24,49 @@ Unit tests run on Vitest (`src/services/__tests__/`, pure logic only — no Thun
 `pnpm test -- <pattern>` filters by file, `pnpm exec vitest run -t "<name>"` by test name.
 
 There is **no linter**. `pnpm test` + `pnpm build` (i.e. `tsc && vite build`) are the local gates; both
-run in CI, which additionally runs `web-ext lint --channel listed` against `dist/`. To reproduce that
-last one locally:
+run in CI, which additionally lints `dist/` through `kewisch/action-web-ext` (`cmd: lint`,
+`channel: listed`). Locally, `--channel` is no longer a web-ext CLI flag, so the closest equivalent
+is:
 
 ```bash
-pnpm exec web-ext lint --source-dir dist --channel listed
+pnpm exec web-ext lint --source-dir dist
 ```
+
+It reports ~29 warnings and 0 errors: the AMO validator only knows the Firefox schema, so every
+MailExtension API and Thunderbird-only permission is flagged. Those are expected — do not "fix" them
+by removing permissions.
 
 To load in Thunderbird: `pnpm build`, then Add-ons → gear → Debug Add-ons → Load Temporary Add-on →
 pick `dist/manifest.json`.
 
 ## Architecture
 
-Two entry points, both plain HTML files at the repo root that Vite treats as rollup inputs:
+Three entry points, all plain HTML files at the repo root that Vite treats as rollup inputs:
 
 - `background.html` → `src/background/index.ts` — registers the Spaces-toolbar entry, the toolbar
   action, the `runtime.onMessage` router, and the `messages.onNewMailReceived` incremental analyzer.
 - `dashboard.html` → `src/ui/dashboard/dashboard.ts` — the full-tab UI. `dashboard.html` is
   hand-written static markup; `DashboardController` wires everything by `getElementById`, so adding a
   control means editing both files.
+- `options.html` → `src/ui/options/options.ts` — the settings page, declared as `options_ui` with
+  `open_in_tab: false`, so Thunderbird renders it inside the Add-ons Manager. There is no Save
+  button: the panel can be closed at any moment, so every control writes on `change`. The dashboard's
+  gear button only calls `runtime.openOptionsPage()`.
+
+Shared UI code lives in `src/ui/shared/`: `tokens.css` (Thunderbird's design tokens, see below) and
+`theme.ts` (applies the stored theme, and re-applies it when the other page changes it).
 
 `public/` is copied verbatim into `dist/` by Vite, so `public/manifest.json` becomes `dist/manifest.json`.
+
+### Styling
+
+Extension pages are not served Thunderbird's chrome stylesheets, so `src/ui/shared/tokens.css`
+restates Thunderbird's own tokens under their upstream names — the palette from
+`mail/themes/shared/mail/colors.css`, the surfaces from `layout.css`, the control metrics from
+`variables.css`. Every token resolves through `light-dark()`, so the "Interface theme" setting is
+nothing more than `color-scheme` pinned on `:root` (`data-theme="light" | "dark"`, absent for auto);
+there is no second dark-mode block to keep in sync. Keep new colours expressed as these tokens rather
+than raw hex, or the add-on stops tracking the Thunderbird theme.
 
 Service layer (`src/services/`, all static-method classes, no DI):
 

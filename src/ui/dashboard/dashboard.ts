@@ -4,6 +4,7 @@ import { ScannerService } from '../../services/scannerService';
 import { StorageService } from '../../services/storageService';
 import { UnsubscribeService } from '../../services/unsubscribeService';
 import { FilterState, MailAccountInfo, ScanProgress, Subscription } from '../../types';
+import { applyStoredTheme, watchThemeChanges } from '../shared/theme';
 
 class DashboardController {
   private subscriptions: Record<string, Subscription> = {};
@@ -19,25 +20,32 @@ class DashboardController {
 
   private currentActionSubscription: Subscription | null = null;
 
-  private static readonly accountPalette: Array<{ bg: string; border: string; fg: string }> = [
-    { bg: '#e0e7ff', border: '#6366f1', fg: '#3730a3' },
-    { bg: '#d1fae5', border: '#10b981', fg: '#065f46' },
-    { bg: '#fef3c7', border: '#f59e0b', fg: '#92400e' },
-    { bg: '#fee2e2', border: '#ef4444', fg: '#991b1b' },
-    { bg: '#ede9fe', border: '#8b5cf6', fg: '#5b21b6' },
-    { bg: '#cffafe', border: '#06b6d4', fg: '#155e75' },
-    { bg: '#fce7f3', border: '#ec4899', fg: '#9d174d' },
-    { bg: '#d1fae5', border: '#059669', fg: '#065f46' }
+  /**
+   * Hues taken from Thunderbird's own palette (mail/themes/shared/mail/colors.css),
+   * assigned deterministically so an account — and a sender — keeps its colour
+   * across sessions.
+   */
+  private static readonly palette: string[] = [
+    '#1373d9', // blue-60
+    '#16a34a', // green-60
+    '#a855f7', // purple-50
+    '#f59e0b', // amber-50
+    '#dc2626', // red-60
+    '#2493ef', // blue-50
+    '#f97316', // orange-50
+    '#6b21a8'  // purple-80
   ];
 
   async init(): Promise<void> {
     LoggerService.info('Initializing Subscriptions Hub Dashboard...');
     this.setupEventListeners();
     this.setupDebugLogListener();
-    await this.loadSettingsAndApplyTheme();
+    await applyStoredTheme();
+    watchThemeChanges();
     await this.loadAccounts();
     await this.loadSubscriptions();
     this.listenForBackgroundEvents();
+    this.watchStoredData();
   }
 
   /**
@@ -104,18 +112,9 @@ class DashboardController {
     const btnExport = document.getElementById('btn-export');
     btnExport?.addEventListener('click', () => this.handleExport());
 
-    // Settings
+    // Settings live in the add-on's own options page
     const btnSettings = document.getElementById('btn-settings');
-    btnSettings?.addEventListener('click', () => this.openSettingsModal());
-
-    const btnSaveSettings = document.getElementById('btn-save-settings');
-    btnSaveSettings?.addEventListener('click', () => this.saveSettingsFromModal());
-
-    const btnCloseSettings = document.getElementById('btn-modal-settings-close');
-    btnCloseSettings?.addEventListener('click', () => this.closeSettingsModal());
-
-    const btnClearData = document.getElementById('btn-clear-data');
-    btnClearData?.addEventListener('click', () => this.handleClearData());
+    btnSettings?.addEventListener('click', () => this.openSettingsPage());
 
     // Unsubscribe modal
     const btnCloseUnsub = document.getElementById('btn-modal-unsub-close');
@@ -318,15 +317,24 @@ class DashboardController {
   }
 
   /**
-   * Creates the HTML element of a subscription card
+   * Creates the HTML element of a subscription card.
+   *
+   * The layout follows Thunderbird's cards view: a sender line with an avatar,
+   * a dense metadata row, then the content preview — flat surfaces, no drop
+   * shadows, and the two identity colours passed as custom properties so the
+   * stylesheet derives every tint from them.
    */
   private createSubscriptionCard(sub: Subscription): HTMLElement {
-    const card = document.createElement('div');
-    card.className = 'sub-card';
-    card.id = `card-${sub.id}`;
-
     const isUnsub = sub.status === 'unsubscribed';
     const hasOneClick = sub.primaryUnsubscribeMethod?.type === 'http-post';
+
+    const card = document.createElement('div');
+    card.className = isUnsub ? 'sub-card is-unsubscribed' : 'sub-card';
+    card.id = `card-${sub.id}`;
+    // The stripe and dot identify the account; the avatar identifies the sender,
+    // so two newsletters in the same mailbox stay visually distinct.
+    card.style.setProperty('--account-color', this.getPaletteColor(sub.accountId));
+    card.style.setProperty('--sender-color', this.getPaletteColor(sub.senderEmail));
 
     const freqLabels: Record<string, string> = {
       daily: 'Daily',
@@ -341,60 +349,48 @@ class DashboardController {
       year: 'numeric'
     });
 
-    const subjectsHtml = sub.recentSubjects.slice(0, 2).map(s =>
-      `<div class="sub-subject-item" title="${this.escapeHtml(s)}">${this.escapeHtml(s)}</div>`
-    ).join('') || '<div class="sub-subject-item">No recent subject</div>';
+    const displayName = sub.senderName || sub.senderEmail;
+    const initial = (displayName.trim().charAt(0) || '?').toUpperCase();
+    const accountLabel = sub.accountName || sub.accountEmail;
 
-    const accColor = this.getAccountColor(sub.accountId);
+    const subjectsHtml = sub.recentSubjects.slice(0, 2).map(s =>
+      `<li class="sub-subject-item" title="${this.escapeHtml(s)}">${this.escapeHtml(s)}</li>`
+    ).join('') || '<li class="sub-subject-item is-empty">No recent subject</li>';
 
     card.innerHTML = `
-      <div class="sub-card-header">
-        <div class="sub-sender-info">
-          <div class="sub-sender-name">
-            ${this.escapeHtml(sub.senderName)}
-          </div>
-          <div class="sub-sender-email">${this.escapeHtml(sub.senderEmail)}</div>
-          <div class="sub-account-tag" style="background-color:${accColor.bg};border-color:${accColor.border};color:${accColor.fg};">
-            ${this.escapeHtml(sub.accountName || sub.accountEmail)}
-          </div>
+      <div class="sub-card-top">
+        <div class="sub-avatar" aria-hidden="true">${this.escapeHtml(initial)}</div>
+        <div class="sub-identity">
+          <div class="sub-sender-name" title="${this.escapeHtml(displayName)}">${this.escapeHtml(displayName)}</div>
+          <div class="sub-sender-email" title="${this.escapeHtml(sub.senderEmail)}">${this.escapeHtml(sub.senderEmail)}</div>
         </div>
-
-        <div class="badges-group">
+        <div class="sub-badges">
           ${isUnsub
             ? `<span class="badge badge-unsubscribed">Unsubscribed</span>`
             : `<span class="badge badge-${sub.frequencyEstimate}">${freqLabels[sub.frequencyEstimate] || 'Occasional'}</span>`
           }
-          ${hasOneClick ? `<span class="badge badge-rfc8058" title="Supports RFC 8058 1-Click unsubscribe">⚡ 1-Click</span>` : ''}
+          ${hasOneClick ? `<span class="badge badge-oneclick" title="Supports RFC 8058 one-click unsubscribe">1-Click</span>` : ''}
         </div>
       </div>
 
-      <div class="sub-metrics-row">
-        <div>
-          <div class="sub-metric-val">${sub.totalMessages}</div>
-          <div class="sub-metric-lbl">Emails received</div>
-        </div>
-        <div>
-          <div class="sub-metric-val">${sub.unreadMessages}</div>
-          <div class="sub-metric-lbl">Unread</div>
-        </div>
-        <div>
-          <div class="sub-metric-val">${lastDateStr}</div>
-          <div class="sub-metric-lbl">Last email</div>
-        </div>
+      <div class="sub-meta">
+        <span class="sub-meta-item"><strong>${sub.totalMessages}</strong> received</span>
+        <span class="sub-meta-item"><strong>${sub.unreadMessages}</strong> unread</span>
+        <span class="sub-meta-item">Last on <strong>${this.escapeHtml(lastDateStr)}</strong></span>
       </div>
 
-      <div class="sub-subjects">
-        <div class="sub-subject-title">Latest received subjects:</div>
-        ${subjectsHtml}
+      <div class="sub-account" title="${this.escapeHtml(accountLabel)}">
+        <span class="sub-account-dot" aria-hidden="true"></span>
+        <span class="sub-account-name">${this.escapeHtml(accountLabel)}</span>
       </div>
+
+      <ul class="sub-subjects">${subjectsHtml}</ul>
 
       <div class="sub-card-actions">
         ${isUnsub ? `
-          <button class="btn btn-sm btn-secondary" disabled>
-            <span>✓ Unsubscribed</span>
-          </button>
+          <button class="btn btn-sm" disabled>Unsubscribed</button>
         ` : `
-          <button class="btn btn-sm btn-danger btn-unsub" data-action="unsub" data-id="${sub.id}">
+          <button class="btn btn-sm btn-destructive" data-action="unsub" data-id="${sub.id}">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <circle cx="12" cy="12" r="10"></circle>
               <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line>
@@ -403,7 +399,7 @@ class DashboardController {
           </button>
         `}
 
-        <button class="btn btn-sm btn-secondary" data-action="clean" data-id="${sub.id}" title="Clean up the emails received from this sender">
+        <button class="btn btn-sm" data-action="clean" data-id="${sub.id}" title="Clean up the emails received from this sender">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <polyline points="3 6 5 6 21 6"></polyline>
             <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
@@ -670,62 +666,28 @@ class DashboardController {
   }
 
   /**
-   * Settings modal
+   * Settings live in the add-on's options page, which Thunderbird renders inside
+   * the Add-ons Manager. Outside Thunderbird (`pnpm dev`) it is just another
+   * page of the dev server.
    */
-  private async openSettingsModal(): Promise<void> {
-    const modal = document.getElementById('modal-settings');
-    const settings = await StorageService.getSettings();
-
-    const autoScan = document.getElementById('setting-auto-scan') as HTMLInputElement;
-    const themeSelect = document.getElementById('setting-theme') as HTMLSelectElement;
-    const batchInput = document.getElementById('setting-batch-size') as HTMLInputElement;
-
-    if (autoScan) autoScan.checked = settings.autoScanOnNewMail;
-    if (themeSelect) themeSelect.value = settings.theme;
-    if (batchInput) batchInput.value = String(settings.scanBatchSize || 30);
-
-    if (modal) modal.classList.remove('hidden');
+  private openSettingsPage(): void {
+    if (typeof browser !== 'undefined' && browser?.runtime?.openOptionsPage) {
+      browser.runtime.openOptionsPage();
+      return;
+    }
+    window.open('./options.html', '_blank');
   }
 
-  private closeSettingsModal(): void {
-    const modal = document.getElementById('modal-settings');
-    if (modal) modal.classList.add('hidden');
-  }
-
-  private async saveSettingsFromModal(): Promise<void> {
-    const autoScan = document.getElementById('setting-auto-scan') as HTMLInputElement;
-    const themeSelect = document.getElementById('setting-theme') as HTMLSelectElement;
-    const batchInput = document.getElementById('setting-batch-size') as HTMLInputElement;
-
-    await StorageService.saveSettings({
-      autoScanOnNewMail: autoScan?.checked ?? true,
-      theme: (themeSelect?.value as any) || 'auto',
-      scanBatchSize: Number(batchInput?.value) || 30
+  /**
+   * A reset performed from the options page must not leave this page showing
+   * rows that no longer exist. Ordinary mid-scan writes are ignored on purpose:
+   * the background already reports those through SCAN_PROGRESS, and reloading
+   * on every batch would re-render the whole grid dozens of times.
+   */
+  private watchStoredData(): void {
+    StorageService.onSubscriptionsChanged((subscriptions) => {
+      if (Object.keys(subscriptions).length === 0) this.loadSubscriptions();
     });
-
-    await this.loadSettingsAndApplyTheme();
-    this.closeSettingsModal();
-    this.showToast('Settings saved.', 'success');
-  }
-
-  private async loadSettingsAndApplyTheme(): Promise<void> {
-    const settings = await StorageService.getSettings();
-    if (settings.theme === 'dark') {
-      document.documentElement.setAttribute('data-theme', 'dark');
-    } else if (settings.theme === 'light') {
-      document.documentElement.setAttribute('data-theme', 'light');
-    } else {
-      document.documentElement.removeAttribute('data-theme');
-    }
-  }
-
-  private async handleClearData(): Promise<void> {
-    if (confirm('Are you sure you want to reset the subscriptions history?')) {
-      await StorageService.clearAllData();
-      await this.loadSubscriptions();
-      this.closeSettingsModal();
-      this.showToast('Local database reset.', 'success');
-    }
   }
 
   /**
@@ -758,17 +720,18 @@ class DashboardController {
   }
 
   /**
-   * Assigns a deterministic and stable color to each account
+   * Picks a deterministic, stable colour for an arbitrary key (an account id, a
+   * sender address) so the same key always renders in the same hue.
    */
-  private getAccountColor(accountId: string): { bg: string; border: string; fg: string } {
+  private getPaletteColor(key: string): string {
     let hash = 0;
-    const key = accountId || 'default';
-    for (let i = 0; i < key.length; i++) {
-      hash = ((hash << 5) - hash) + key.charCodeAt(i);
+    const source = key || 'default';
+    for (let i = 0; i < source.length; i++) {
+      hash = ((hash << 5) - hash) + source.charCodeAt(i);
       hash |= 0;
     }
-    const index = Math.abs(hash) % DashboardController.accountPalette.length;
-    return DashboardController.accountPalette[index];
+    const index = Math.abs(hash) % DashboardController.palette.length;
+    return DashboardController.palette[index];
   }
 }
 // Initialization on DOM load

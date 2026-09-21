@@ -148,6 +148,33 @@ export class StorageService {
   }
 
   /**
+   * Subscribes to `browser.storage.local` changes for one key.
+   *
+   * The options page and the dashboard are two separate documents, so this is
+   * the only channel through which one learns that the other wrote something.
+   * Outside Thunderbird there is no equivalent event, and the callback simply
+   * never fires.
+   */
+  private static onKeyChanged(key: string, callback: (newValue: any) => void): void {
+    if (typeof browser === 'undefined' || !browser?.storage?.onChanged) return;
+    browser.storage.onChanged.addListener((changes: Record<string, any>, areaName: string) => {
+      if (areaName !== 'local') return;
+      const change = changes[key];
+      if (change) callback(change.newValue);
+    });
+  }
+
+  static onSettingsChanged(callback: (settings: AppSettings) => void): void {
+    this.onKeyChanged(STORAGE_KEYS.SETTINGS, (newValue) => {
+      callback({ ...DEFAULT_SETTINGS, ...(newValue || {}) });
+    });
+  }
+
+  static onSubscriptionsChanged(callback: (subscriptions: Record<string, Subscription>) => void): void {
+    this.onKeyChanged(STORAGE_KEYS.SUBSCRIPTIONS, (newValue) => callback(newValue || {}));
+  }
+
+  /**
    * Resets all data
    */
   static async clearAllData(): Promise<void> {

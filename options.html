@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Subscriptions Hub - Settings</title>
+    <link rel="stylesheet" href="./src/ui/options/options.css">
+  </head>
+  <body>
+    <form id="options-form" class="options-page">
+      <!-- Detection -->
+      <section class="option-group">
+        <h2 class="option-group-title">Detection</h2>
+
+        <div class="option-row option-row-inline">
+          <input type="checkbox" id="setting-auto-scan" />
+          <div class="option-text">
+            <label for="setting-auto-scan" class="option-label">Analyze new messages as they arrive</label>
+            <p class="option-description">
+              Keeps the subscription list up to date in the background, without re-running a full analysis.
+            </p>
+          </div>
+        </div>
+
+        <div class="option-row">
+          <label for="setting-ignored-domains" class="option-label">Ignored domains</label>
+          <p class="option-description">
+            One domain per line. Messages sent from these domains are never turned into a subscription.
+          </p>
+          <textarea id="setting-ignored-domains" rows="4" spellcheck="false"
+                    placeholder="example.com&#10;newsletter.internal"></textarea>
+        </div>
+      </section>
+
+      <!-- Appearance -->
+      <section class="option-group">
+        <h2 class="option-group-title">Appearance</h2>
+
+        <div class="option-row">
+          <label for="setting-theme" class="option-label">Interface theme</label>
+          <select id="setting-theme">
+            <option value="auto">Follow Thunderbird</option>
+            <option value="light">Light</option>
+            <option value="dark">Dark</option>
+          </select>
+        </div>
+      </section>
+
+      <!-- Performance -->
+      <section class="option-group">
+        <h2 class="option-group-title">Performance</h2>
+
+        <div class="option-row">
+          <label for="setting-batch-size" class="option-label">Messages per batch</label>
+          <p class="option-description">
+            How many messages are analyzed before the scanner yields. Lower this on very large mailboxes.
+          </p>
+          <input type="number" id="setting-batch-size" min="10" max="200" step="10" />
+        </div>
+
+        <div class="option-row">
+          <label for="setting-throttle" class="option-label">Pause between batches (ms)</label>
+          <p class="option-description">
+            A longer pause keeps Thunderbird more responsive while an analysis runs.
+          </p>
+          <input type="number" id="setting-throttle" min="0" max="500" step="5" />
+        </div>
+      </section>
+
+      <!-- Data -->
+      <section class="option-group">
+        <h2 class="option-group-title">Local data</h2>
+
+        <div class="option-row">
+          <p class="option-description" id="data-summary">Nothing analyzed yet.</p>
+          <p class="option-description">
+            Resetting clears the detected subscriptions and the list of already-analyzed messages.
+            Your emails are never touched.
+          </p>
+          <div class="option-actions">
+            <button type="button" id="btn-reset-data" class="btn btn-destructive">Reset local data</button>
+            <span id="reset-confirm" class="reset-confirm hidden">
+              <span class="reset-question">This cannot be undone.</span>
+              <button type="button" id="btn-reset-confirm" class="btn btn-destructive">Confirm reset</button>
+              <button type="button" id="btn-reset-cancel" class="btn">Cancel</button>
+            </span>
+          </div>
+        </div>
+      </section>
+
+      <p id="options-status" class="options-status" role="status" aria-live="polite"></p>
+    </form>
+
+    <script type="module" src="./src/ui/options/options.ts"></script>
+  </body>
+</html>

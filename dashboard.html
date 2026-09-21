@@ -41,7 +41,7 @@
             <span>Export</span>
           </button>
 
-          <button id="btn-settings" class="btn btn-secondary" title="Settings">
+          <button id="btn-settings" class="btn btn-secondary" title="Open the add-on settings">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <circle cx="12" cy="12" r="3"></circle>
               <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
@@ -258,49 +258,6 @@
           <div class="modal-footer">
             <button class="btn btn-secondary" id="btn-clean-cancel">Keep messages</button>
             <button class="btn btn-danger" id="btn-clean-confirm">Move to trash</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Settings modal -->
-      <div id="modal-settings" class="modal-overlay hidden">
-        <div class="modal-card">
-          <div class="modal-header">
-            <h3 class="modal-title">Subscriptions Hub Settings</h3>
-            <button class="modal-close" id="btn-modal-settings-close">&times;</button>
-          </div>
-          <div class="modal-body">
-            <div class="setting-item">
-              <label class="setting-label">
-                <input type="checkbox" id="setting-auto-scan" />
-                <span>Automatic detection when receiving new emails</span>
-              </label>
-              <div class="setting-desc">Continuously analyzes incoming new messages in the background.</div>
-            </div>
-
-            <div class="setting-item">
-              <label class="setting-label-text" for="setting-theme">Interface theme:</label>
-              <select id="setting-theme" class="setting-select">
-                <option value="auto">Automatic (Thunderbird theme)</option>
-                <option value="light">Light</option>
-                <option value="dark">Dark</option>
-              </select>
-            </div>
-
-            <div class="setting-item">
-              <label class="setting-label-text" for="setting-batch-size">Analysis batch size (messages):</label>
-              <input type="number" id="setting-batch-size" min="10" max="200" value="30" class="setting-input" />
-              <div class="setting-desc">Lower this value if you notice slowdowns on very large mailboxes.</div>
-            </div>
-
-            <div class="setting-danger-zone">
-              <h4>Reset zone</h4>
-              <p>Clear history and reset the local subscriptions database.</p>
-              <button id="btn-clear-data" class="btn btn-sm btn-outline-danger">Reset local database</button>
-            </div>
-          </div>
-          <div class="modal-footer">
-            <button class="btn btn-primary" id="btn-save-settings">Save settings</button>
           </div>
         </div>
       </div>

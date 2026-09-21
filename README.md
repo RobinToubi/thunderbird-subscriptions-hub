@@ -18,7 +18,10 @@
 - **Total Privacy (100% Local)** : No data or metadata ever leaves your machine. Secure local storage via `browser.storage.local`.
 - **Data export** : CSV and JSON export to audit your subscriptions.
 - **Thunderbird Supernova integration** : Accessible via the spaces toolbar and native tabs.
-- **Modern Vanilla CSS design** : Respects dark / light mode and ergonomic standards.
+- **Native Thunderbird look** : Built on Thunderbird's own design tokens, so the add-on follows the
+  light / dark theme of the client it runs in.
+- **Settings in the Add-ons Manager** : Detection, appearance, scan pacing and local-data reset live in
+  the add-on's own settings panel, not in a separate dialog.
 
 ---
 
@@ -40,11 +43,14 @@
 │   ├── background/
 │   │   └── index.ts          # Background script (Spaces, Action, onNewMailReceived)
 │   └── ui/
-│       └── dashboard/
-│           ├── dashboard.css # Typed Vanilla CSS styles with dark mode
-│           └── dashboard.ts  # Interactive dashboard controller
+│       ├── dashboard/
+│       │   ├── dashboard.css # Dashboard styles (Thunderbird design language)
+│       │   └── dashboard.ts  # Interactive dashboard controller
+│       ├── options/          # Settings page shown in the Add-ons Manager
+│       └── shared/           # Thunderbird design tokens + theme helper
 ├── background.html           # WebExtension background entry point
 ├── dashboard.html            # Fullscreen tab entry point
+├── options.html              # Settings entry point (options_ui)
 ├── vite.config.ts            # Vite bundler configuration
 ├── tsconfig.json             # TypeScript configuration
 └── package.json

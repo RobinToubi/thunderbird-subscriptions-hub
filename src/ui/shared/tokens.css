@@ -1,0 +1,150 @@
+/**
+ * Thunderbird design tokens.
+ *
+ * Extension pages are not served Thunderbird's own chrome stylesheets, so the
+ * palette below mirrors the values Thunderbird ships in
+ * `mail/themes/shared/mail/colors.css` and `.../layout.css`, under the same
+ * names — the two can be diffed when Thunderbird moves.
+ *
+ * Light and dark are driven entirely by `color-scheme`: every token resolves
+ * through `light-dark()`, so forcing a theme is a single declaration instead of
+ * a duplicated block. `color-scheme: light dark` also makes Thunderbird render
+ * the native form controls and scrollbars of the matching theme.
+ */
+
+:root {
+  color-scheme: light dark;
+
+  /* Palette — colors.css */
+  --color-white: #ffffff;
+  --color-black: #000000;
+
+  --color-gray-05: #fafafa;
+  --color-gray-10: #f4f4f5;
+  --color-gray-20: #e4e4e7;
+  --color-gray-30: #d4d4d8;
+  --color-gray-40: #a1a1aa;
+  --color-gray-50: #71717a;
+  --color-gray-60: #52525b;
+  --color-gray-70: #3f3f46;
+  --color-gray-80: #27272a;
+  --color-gray-90: #18181b;
+
+  --color-blue-10: #ddeefe;
+  --color-blue-30: #88ccfc;
+  --color-blue-40: #4cb1f9;
+  --color-blue-50: #2493ef;
+  --color-blue-60: #1373d9;
+  --color-blue-70: #105bbc;
+
+  --color-red-50: #ef4444;
+  --color-red-60: #dc2626;
+  --color-red-70: #b91c1c;
+  --color-green-50: #22c55e;
+  --color-green-60: #16a34a;
+  --color-orange-50: #f97316;
+  --color-amber-50: #f59e0b;
+  --color-purple-50: #a855f7;
+  --color-purple-80: #6b21a8;
+
+  /* Layout — layout.css */
+  --layout-background-0: light-dark(var(--color-white), var(--color-gray-90));
+  --layout-background-1: light-dark(var(--color-gray-05), var(--color-gray-80));
+  --layout-background-2: light-dark(var(--color-gray-10), var(--color-gray-70));
+  --layout-background-3: light-dark(var(--color-gray-20), var(--color-gray-60));
+  --layout-background-4: light-dark(var(--color-gray-30), var(--color-gray-50));
+
+  --layout-color-0: light-dark(var(--color-black), var(--color-white));
+  --layout-color-1: light-dark(var(--color-gray-90), var(--color-gray-10));
+  --layout-color-2: light-dark(var(--color-gray-70), var(--color-gray-30));
+  --layout-color-3: var(--color-gray-50);
+
+  /* Thunderbird resolves --layout-border-0 from a neutral ramp it keeps
+     private to the chrome; gray-20/gray-70 is the closest public equivalent. */
+  --layout-border-0: light-dark(var(--color-gray-20), var(--color-gray-70));
+  --layout-border-1: light-dark(var(--color-gray-40), var(--color-gray-60));
+  --layout-border-2: var(--color-gray-50);
+
+  /* Selection follows the Thunderbird/OS accent, exactly like variables.css */
+  --selected-item-color: AccentColor;
+  --selected-item-text-color: AccentColorText;
+
+  /* Buttons — variables.css */
+  --button-background-color: var(--layout-background-3);
+  --button-hover-background-color: var(--layout-background-4);
+  --button-text-color: var(--layout-color-1);
+  --button-border-radius: 3px;
+  --button-min-height: 32px;
+  --button-padding: 6px 12px;
+  --button-primary-background-color: light-dark(var(--color-blue-60), var(--color-blue-50));
+  --button-primary-hover-background-color: light-dark(var(--color-blue-70), var(--color-blue-60));
+  --button-primary-text-color: var(--color-white);
+  --button-destructive-background-color: var(--color-red-60);
+  --button-destructive-hover-background-color: var(--color-red-70);
+  --button-destructive-text-color: var(--color-white);
+
+  /* Semantic aliases used across the add-on's own stylesheets */
+  --bg-primary: var(--layout-background-1);
+  --bg-surface: var(--layout-background-0);
+  --bg-surface-secondary: var(--layout-background-1);
+  --bg-surface-hover: var(--layout-background-2);
+
+  --text-primary: var(--layout-color-1);
+  --text-secondary: var(--layout-color-2);
+  --text-muted: var(--layout-color-3);
+
+  --accent-primary: light-dark(var(--color-blue-60), var(--color-blue-40));
+  --accent-primary-hover: light-dark(var(--color-blue-70), var(--color-blue-50));
+  --accent-primary-light: color-mix(in srgb, var(--accent-primary) 14%, transparent);
+
+  --success-color: light-dark(var(--color-green-60), var(--color-green-50));
+  --success-light: color-mix(in srgb, var(--success-color) 14%, transparent);
+  --warning-color: light-dark(var(--color-amber-50), var(--color-amber-50));
+  --warning-light: color-mix(in srgb, var(--warning-color) 16%, transparent);
+  --danger-color: light-dark(var(--color-red-60), var(--color-red-50));
+  --danger-light: color-mix(in srgb, var(--danger-color) 14%, transparent);
+  --info-color: light-dark(var(--color-blue-60), var(--color-blue-40));
+  --info-light: color-mix(in srgb, var(--info-color) 14%, transparent);
+
+  --border-color: var(--layout-border-0);
+  --border-strong: var(--layout-border-1);
+  --border-focus: var(--accent-primary);
+
+  /* Thunderbird's chrome is flat: radii stay small and shadows are reserved
+     for genuinely floating surfaces (menus, dialogs, toasts). */
+  --radius-sm: 3px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-full: 9999px;
+
+  --shadow-popup: 0 2px 8px light-dark(rgb(0 0 0 / 0.16), rgb(0 0 0 / 0.5));
+
+  --font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Ubuntu, Cantarell,
+    'Helvetica Neue', sans-serif;
+  --font-size-base: 14px;
+
+  --transition-fast: 0.12s ease;
+  --transition-normal: 0.2s ease;
+}
+
+/* The "Interface theme" setting simply pins the scheme the tokens resolve against. */
+:root[data-theme='light'] {
+  color-scheme: light;
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+}
+
+/* Thunderbird drops its own borders and backgrounds in favour of system colors
+   when the platform asks for high contrast; do the same rather than fight it. */
+@media (prefers-contrast: more) {
+  :root {
+    --layout-background-0: Canvas;
+    --layout-background-1: -moz-Dialog;
+    --layout-color-1: -moz-DialogText;
+    --layout-border-0: ThreeDShadow;
+    --layout-border-1: ThreeDShadow;
+    --border-color: ThreeDShadow;
+  }
+}

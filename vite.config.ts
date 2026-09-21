@@ -18,7 +18,8 @@ export default defineConfig({
     rollupOptions: {
       input: {
         background: resolve(__dirname, 'background.html'),
-        dashboard: resolve(__dirname, 'dashboard.html')
+        dashboard: resolve(__dirname, 'dashboard.html'),
+        options: resolve(__dirname, 'options.html')
       },
       output: {
         entryFileNames: 'assets/[name].js',
