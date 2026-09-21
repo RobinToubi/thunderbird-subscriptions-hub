@@ -14,7 +14,7 @@ TypeScript + Vite, vanilla DOM (no framework), pnpm.
 ## Commands
 
 ```bash
-pnpm dev      # Vite dev server — opens dashboard.html in a normal browser with MOCK data (see below)
+pnpm dev      # Vite dev server — landing page at / links to the three extension pages (MOCK data)
 pnpm test     # Vitest, run once
 pnpm build    # tsc (noEmit type-check) + vite build → dist/
 pnpm release <patch|minor|major|X.Y.Z> [--push]   # bump + commit + tag
@@ -92,10 +92,24 @@ The pattern is a `typeof browser !== 'undefined' && browser?.x?.y` guard with a 
 fallback:
 
 - `AccountService.listAccounts()` → `getMockAccounts()`
-- `ScannerService.startScan()` → `runMockScan()` (hardcoded demo subscriptions, fake progress)
+- `ScannerService.startScan()` → `runMockScan()` (real progress bar, fixture results)
 - `StorageService` → `localStorage` instead of `browser.storage.local`
 
 Keep this invariant when adding code — an unguarded `browser.*` access breaks `pnpm dev`.
+
+The demo data itself lives in `src/dev/` and is **not** shipped: `fixtures.ts` (two accounts and the
+subscriptions worth having on screen — every frequency, every unsubscribe method, an unsubscribed row,
+a sender with no display name, an overlong subject, and a subject full of quotes and angle brackets as
+the escaping regression fixture) and `seed.ts`. Each use site is a dynamic `import()` inside an
+`if (import.meta.env.DEV)` branch, which Vite turns into `if (false)` when building, so Rollup drops
+the branch and the chunk. Import them any other way and the fixtures land in the published add-on.
+
+The dashboard seeds on first load under `pnpm dev`, so the page is never empty; `?seed=force` rebuilds
+the data and `?seed=clear` empties it to get the empty state back. A Node script could not do this —
+outside Thunderbird the data lives in the page's `localStorage`.
+
+`index.html` at the repo root is the dev-server landing page. It is not a rollup input, so it never
+reaches `dist/`.
 
 `browser` is declared as `const browser: any` in `src/types/index.ts`; there are no Thunderbird API
 typings, so API calls are unchecked. Be careful: Thunderbird MV3 removed `MailFolder.type` in favour of

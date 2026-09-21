@@ -302,57 +302,15 @@ export class ScannerService {
   }
 
   /**
-   * Realistic scan simulation for Vite development / demo mode
+   * Scan simulation for `pnpm dev`: the progress bar runs for real, and the
+   * results are the shared demo fixtures, so a simulated scan and a seeded page
+   * show exactly the same data. Stripped from the production build.
    */
   private static async runMockScan(
     accounts: any[],
     existingSubscriptions: Record<string, Subscription>,
     updateProgress: (updates: Partial<ScanProgress>) => void
   ): Promise<{ subscriptions: Record<string, Subscription>; totalProcessed: number }> {
-    const mockFeed = [
-      {
-        senderName: 'Emma | GetYourGuide',
-        senderEmail: 'hello@mkt.getyourguide.com',
-        senderDomain: 'mkt.getyourguide.com',
-        listId: undefined,
-        accountIndex: 0,
-        subjects: ['Skipped these national parks?', 'Discover top travel destinations'],
-        method: {
-          type: 'http-post' as const,
-          target: 'https://travelers-api.getyourguide.com/marketing-emails/unsubscribe/ST293LA5X3VYABC2GKK4AKDK5I0Y25N4?visitorId=6YK7FT7Y5UKMMQ8VKTLJRZNNOYKEQBC7',
-          postPayload: 'List-Unsubscribe=One-Click',
-          source: 'header-rfc8058' as const
-        },
-        count: 14,
-        unread: 4,
-        freq: 'weekly' as const
-      },
-      {
-        senderName: 'GitHub Explore',
-        senderEmail: 'explore@github.com',
-        senderDomain: 'github.com',
-        listId: 'github-explore-digest',
-        accountIndex: 0,
-        subjects: ['Trending repositories this week', 'GitHub Universe 2026 Announcements'],
-        method: { type: 'http-post' as const, target: 'https://github.com/settings/unsubscribe/one-click', source: 'header-rfc8058' as const },
-        count: 24,
-        unread: 6,
-        freq: 'weekly' as const
-      },
-      {
-        senderName: 'Medium Daily Digest',
-        senderEmail: 'noreply@medium.com',
-        senderDomain: 'medium.com',
-        listId: 'medium-daily-curated',
-        accountIndex: 0,
-        subjects: ['10 Architecture Patterns for modern Web Apps', 'Why Rust and WebAssembly are the future'],
-        method: { type: 'http-get' as const, target: 'https://medium.com/me/unsubscribe?token=sample123', source: 'header-rfc2369' as const },
-        count: 68,
-        unread: 45,
-        freq: 'daily' as const
-      }
-    ];
-
     const totalSteps = 60;
     updateProgress({ totalEstimatedMessages: totalSteps, processedMessages: 0 });
 
@@ -366,36 +324,11 @@ export class ScannerService {
       });
     }
 
-    const now = Date.now();
-    for (const item of mockFeed) {
-      const acc = accounts[0] || { id: 'acc-demo', name: 'Personnel (Gmail)', identities: [{ email: 'gimenez.robin11@gmail.com' }] };
-      const subId = ParserService.generateSubscriptionId(acc.id, item.senderEmail, item.listId);
-      
-      existingSubscriptions[subId] = {
-        id: subId,
-        accountId: acc.id,
-        accountName: acc.name,
-        accountEmail: acc.identities[0]?.email || 'gimenez.robin11@gmail.com',
-        senderName: item.senderName,
-        senderEmail: item.senderEmail,
-        senderDomain: item.senderDomain,
-        listId: item.listId,
-        category: 'newsletter',
-        totalMessages: item.count,
-        unreadMessages: item.unread,
-        firstReceivedAt: now - (item.count * 86400000 * 7),
-        lastReceivedAt: now - (Math.floor(Math.random() * 3) * 86400000),
-        frequencyEstimate: item.freq,
-        recentSubjects: item.subjects,
-        recentMessageIds: [101, 102, 103],
-        unsubscribeMethods: [item.method],
-        primaryUnsubscribeMethod: item.method,
-        status: 'active',
-        tags: ['Voyage', 'Tech']
-      };
+    if (import.meta.env.DEV) {
+      const { buildDemoSubscriptions } = await import('../dev/fixtures');
+      Object.assign(existingSubscriptions, buildDemoSubscriptions(accounts));
+      await StorageService.saveSubscriptions(existingSubscriptions);
     }
-
-    await StorageService.saveSubscriptions(existingSubscriptions);
 
     updateProgress({
       state: 'completed',

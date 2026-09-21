@@ -42,6 +42,7 @@ class DashboardController {
     this.setupDebugLogListener();
     await applyStoredTheme();
     watchThemeChanges();
+    await this.seedDevDataIfNeeded();
     await this.loadAccounts();
     await this.loadSubscriptions();
     this.listenForBackgroundEvents();
@@ -191,6 +192,17 @@ class DashboardController {
     navigator.clipboard.writeText(logs).then(() => {
       this.showToast('Diagnostic logs copied to the clipboard.', 'success');
     });
+  }
+
+  /**
+   * Under `pnpm dev` the dashboard would otherwise open on an empty state until
+   * you run a simulated scan. The whole branch disappears from the production
+   * build, fixtures included.
+   */
+  private async seedDevDataIfNeeded(): Promise<void> {
+    if (!import.meta.env.DEV || typeof browser !== 'undefined') return;
+    const { seedDevData } = await import('../../dev/seed');
+    await seedDevData();
   }
 
   /**
@@ -349,7 +361,10 @@ class DashboardController {
       year: 'numeric'
     });
 
-    const displayName = sub.senderName || sub.senderEmail;
+    // Senders without a display name fall back to their address; repeating it on
+    // the line below would just be the same string twice.
+    const hasSenderName = Boolean(sub.senderName?.trim());
+    const displayName = hasSenderName ? sub.senderName : sub.senderEmail;
     const initial = (displayName.trim().charAt(0) || '?').toUpperCase();
     const accountLabel = sub.accountName || sub.accountEmail;
 
@@ -362,7 +377,7 @@ class DashboardController {
         <div class="sub-avatar" aria-hidden="true">${this.escapeHtml(initial)}</div>
         <div class="sub-identity">
           <div class="sub-sender-name" title="${this.escapeHtml(displayName)}">${this.escapeHtml(displayName)}</div>
-          <div class="sub-sender-email" title="${this.escapeHtml(sub.senderEmail)}">${this.escapeHtml(sub.senderEmail)}</div>
+          ${hasSenderName ? `<div class="sub-sender-email" title="${this.escapeHtml(sub.senderEmail)}">${this.escapeHtml(sub.senderEmail)}</div>` : ''}
         </div>
         <div class="sub-badges">
           ${isUnsub

@@ -42,6 +42,7 @@
 │   │   └── unsubscribeService.ts # Unsubscribe and cleanup execution
 │   ├── background/
 │   │   └── index.ts          # Background script (Spaces, Action, onNewMailReceived)
+│   ├── dev/                  # Demo fixtures + seeding (dev only, stripped from builds)
 │   └── ui/
 │       ├── dashboard/
 │       │   ├── dashboard.css # Dashboard styles (Thunderbird design language)
@@ -51,6 +52,7 @@
 ├── background.html           # WebExtension background entry point
 ├── dashboard.html            # Fullscreen tab entry point
 ├── options.html              # Settings entry point (options_ui)
+├── index.html                # Dev-server landing page (not part of the build)
 ├── vite.config.ts            # Vite bundler configuration
 ├── tsconfig.json             # TypeScript configuration
 └── package.json
@@ -69,7 +71,9 @@ To test and preview the interface right away with simulated data and a simulated
 ```bash
 pnpm dev
 ```
-Open your browser to the address shown (e.g. `http://localhost:5173/dashboard.html`).
+Open the address shown (e.g. `http://localhost:5173/`) and pick a page. The dashboard seeds demo data
+on first load, so there is something to look at right away; `?seed=force` rebuilds it and `?seed=clear`
+empties it. None of this demo data is part of the built extension.
 
 ### 3. Build for Thunderbird
 To compile the complete extension ready for Thunderbird:
