@@ -20,8 +20,10 @@
 - **Thunderbird Supernova integration** : Accessible via the spaces toolbar and native tabs.
 - **Native Thunderbird look** : Built on Thunderbird's own design tokens, so the add-on follows the
   light / dark theme of the client it runs in.
-- **Settings in the Add-ons Manager** : Detection, appearance, scan pacing and local-data reset live in
-  the add-on's own settings panel, not in a separate dialog.
+- **Settings in the Add-ons Manager** : Detection, folder selection, appearance, scan pacing and
+  local-data reset live in the add-on's own settings panel, not in a separate dialog.
+- **Per-folder analysis** : Pick exactly which folders are analyzed, account by account. Excluding a
+  folder excludes its sub-folders; Trash, Junk, Drafts and Sent are never analyzed.
 
 ---
 

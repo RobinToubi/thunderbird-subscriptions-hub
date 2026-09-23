@@ -71,7 +71,7 @@ export class ScannerService {
       let estimatedTotal = 0;
       for (const acc of targetAccounts) {
         for (const folder of acc.folders) {
-          if (AccountService.isScanEligibleFolder(folder)) {
+          if (AccountService.isScanEligibleFolder(folder, settings.excludedFolders)) {
             estimatedTotal += folder.totalSubMessages || 50;
           }
         }
@@ -86,8 +86,11 @@ export class ScannerService {
 
         for (const folder of account.folders) {
           if (this.shouldCancel) break;
-          if (!AccountService.isScanEligibleFolder(folder)) {
-            LoggerService.info(`⏭️ Folder ignored: "${folder.name}" (${folder.type || 'standard'})`);
+          if (!AccountService.isScanEligibleFolder(folder, settings.excludedFolders)) {
+            const reason = AccountService.isFolderExcluded(folder, settings.excludedFolders)
+              ? 'excluded in the settings'
+              : folder.type || 'standard';
+            LoggerService.info(`⏭️ Folder ignored: "${folder.name}" (${reason})`);
             continue;
           }
 

@@ -125,19 +125,32 @@ export class AccountService {
   }
 
   /**
-   * Determines whether a folder should be analyzed
+   * Stable identifier for a folder across Thunderbird restarts.
+   *
+   * `MailFolder.id` is a runtime handle and may differ between sessions, so the
+   * stored exclusions key on the account id plus the folder path instead.
+   * Account ids never contain a colon and paths always start with `/`, so the
+   * first colon is an unambiguous separator.
    */
-  static isScanEligibleFolder(folder: MailFolderInfo): boolean {
+  static folderKey(folder: Pick<MailFolderInfo, 'accountId' | 'path'>): string {
+    return `${folder.accountId}:${folder.path}`;
+  }
+
+  /**
+   * Folders the add-on never analyzes, whatever the settings say: a
+   * subscription has no business being detected in Trash, Junk, Sent or Drafts.
+   */
+  static isSystemIgnoredFolder(folder: MailFolderInfo): boolean {
     // MV3: the type property has been removed from MailFolder, replaced by specialUse.
     // To be safe, both are checked: type (MV2 / demo) and specialUse (MV3).
     const type = (folder.type || '').toLowerCase();
     const specialUses = (folder.specialUse || []).map(u => u.toLowerCase());
     const ignoredTypes = ['trash', 'junk', 'outbox', 'drafts', 'templates', 'sent'];
     if (type && ignoredTypes.includes(type)) {
-      return false;
+      return true;
     }
     if (specialUses.some(u => ignoredTypes.includes(u))) {
-      return false;
+      return true;
     }
 
     const lowerName = (folder.name || '').toLowerCase();
@@ -158,11 +171,35 @@ export class AccountService {
         lowerName.includes(`/${kw}/`) ||
         lowerPath.endsWith(`/${kw}`)
       ) {
-        return false;
+        return true;
       }
     }
 
-    return true;
+    return false;
+  }
+
+  /**
+   * Whether the user excluded this folder in the settings.
+   *
+   * Excluding a folder excludes everything under it — the settings list only
+   * offers one checkbox per folder, and nobody expects a sub-folder of an
+   * excluded folder to keep being analyzed.
+   */
+  static isFolderExcluded(
+    folder: Pick<MailFolderInfo, 'accountId' | 'path'>,
+    excludedFolders: string[] = []
+  ): boolean {
+    if (excludedFolders.length === 0) return false;
+    const key = this.folderKey(folder);
+    return excludedFolders.some(excluded => key === excluded || key.startsWith(`${excluded}/`));
+  }
+
+  /**
+   * Determines whether a folder should be analyzed
+   */
+  static isScanEligibleFolder(folder: MailFolderInfo, excludedFolders: string[] = []): boolean {
+    if (this.isSystemIgnoredFolder(folder)) return false;
+    return !this.isFolderExcluded(folder, excludedFolders);
   }
 
   /**

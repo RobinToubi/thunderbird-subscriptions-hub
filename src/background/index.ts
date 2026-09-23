@@ -1,3 +1,4 @@
+import { AccountService } from '../services/accountService';
 import { ParserService } from '../services/parserService';
 import { ScannerService } from '../services/scannerService';
 import { StorageService } from '../services/storageService';
@@ -131,6 +132,11 @@ if (typeof browser !== 'undefined' && browser?.messages?.onNewMailReceived) {
     try {
       const settings = await StorageService.getSettings();
       if (!settings.autoScanOnNewMail) return;
+
+      // The incremental path has to honour the same folder rules as a full scan,
+      // otherwise a filter dropping mail into an excluded folder would quietly
+      // re-create the subscriptions the user opted out of.
+      if (!AccountService.isScanEligibleFolder(folder, settings.excludedFolders)) return;
 
       const subscriptions = await StorageService.getSubscriptions();
       const analyzedIds = await StorageService.getAnalyzedMessageIds();
