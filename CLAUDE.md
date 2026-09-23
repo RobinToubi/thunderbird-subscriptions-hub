@@ -51,7 +51,10 @@ Three entry points, all plain HTML files at the repo root that Vite treats as ro
 - `options.html` → `src/ui/options/options.ts` — the settings page, declared as `options_ui` with
   `open_in_tab: false`, so Thunderbird renders it inside the Add-ons Manager. There is no Save
   button: the panel can be closed at any moment, so every control writes on `change`. The dashboard's
-  gear button only calls `runtime.openOptionsPage()`.
+  gear button only calls `runtime.openOptionsPage()`. The folder picker is the one part built from
+  the DOM rather than from static markup — it calls `AccountService.listAccounts()` (the slow step, so
+  it runs last in `init()`) and re-renders wholesale on every toggle, because excluding a folder also
+  disables everything under it.
 
 Shared UI code lives in `src/ui/shared/`: `tokens.css` (Thunderbird's design tokens, see below) and
 `theme.ts` (applies the stored theme, and re-applies it when the other page changes it).
@@ -71,7 +74,13 @@ than raw hex, or the add-on stops tracking the Thunderbird theme.
 Service layer (`src/services/`, all static-method classes, no DI):
 
 - `accountService` — walks `accounts.list(true)` → `rootFolder` → async `getSubFolders()`, flattens to
-  `MailFolderInfo[]`, and decides scan eligibility.
+  `MailFolderInfo[]`, and decides scan eligibility. Two independent rules there:
+  `isSystemIgnoredFolder()` (Trash/Junk/Sent/Drafts, by `specialUse`, by MV2 `type` and by a
+  French/English name blacklist) and `isFolderExcluded()` (what the user unchecked in the settings,
+  keyed by `folderKey()` = `accountId:path` — `MailFolder.id` is a runtime handle and cannot be
+  stored. An excluded key also covers everything below it). `isScanEligibleFolder()` is the two
+  combined, and both the scanner and the background `onNewMailReceived` listener go through it, so a
+  filter dropping mail into an excluded folder cannot revive a subscription.
 - `parserService` — pure functions: author parsing, `List-Unsubscribe` / `List-Unsubscribe-Post`
   parsing, marketing-ESP header heuristics, HTML-body link fallback, method ranking, ID hashing.
   This is the only place with no browser-API dependency, so newsletter-detection changes belong here.
@@ -97,10 +106,11 @@ fallback:
 
 Keep this invariant when adding code — an unguarded `browser.*` access breaks `pnpm dev`.
 
-The demo data itself lives in `src/dev/` and is **not** shipped: `fixtures.ts` (two accounts and the
-subscriptions worth having on screen — every frequency, every unsubscribe method, an unsubscribed row,
-a sender with no display name, an overlong subject, and a subject full of quotes and angle brackets as
-the escaping regression fixture) and `seed.ts`. Each use site is a dynamic `import()` inside an
+The demo data itself lives in `src/dev/` and is **not** shipped: `fixtures.ts` (two accounts — one of them with a
+nested folder, so the settings folder picker has a sub-folder to indent — and the subscriptions worth
+having on screen: every frequency, every unsubscribe method, an unsubscribed row, a sender with no
+display name, an overlong subject, and a subject full of quotes and angle brackets as the escaping
+regression fixture) and `seed.ts`. Each use site is a dynamic `import()` inside an
 `if (import.meta.env.DEV)` branch, which Vite turns into `if (false)` when building, so Rollup drops
 the branch and the chunk. Import them any other way and the fixtures land in the published add-on.
 

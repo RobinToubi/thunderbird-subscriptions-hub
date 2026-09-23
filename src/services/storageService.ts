@@ -12,7 +12,8 @@ const DEFAULT_SETTINGS: AppSettings = {
   scanBatchSize: 30,
   scanThrottleDelayMs: 25,
   theme: 'auto',
-  ignoredDomains: []
+  ignoredDomains: [],
+  excludedFolders: []
 };
 
 export class StorageService {

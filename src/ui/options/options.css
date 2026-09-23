@@ -122,6 +122,75 @@ button:focus-visible {
   outline-offset: 1px;
 }
 
+/* Folder picker: a scrollable, bordered list so a mailbox with dozens of
+   folders does not push the rest of the settings out of the frame. */
+.folder-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-height: 280px;
+  overflow-y: auto;
+  padding: 8px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--button-border-radius);
+  background-color: var(--layout-background-1);
+}
+
+.folder-account {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.folder-account-name {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+  padding-bottom: 2px;
+}
+
+.folder-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 3px 4px;
+  /* One step of indent per path segment below the account root. */
+  padding-inline-start: calc(4px + var(--folder-depth, 0) * 16px);
+  border-radius: var(--button-border-radius);
+  cursor: pointer;
+}
+
+.folder-row:hover {
+  background-color: var(--layout-background-2);
+}
+
+.folder-row input[type='checkbox'] {
+  margin-top: 0;
+}
+
+.folder-row.is-disabled {
+  cursor: default;
+  color: var(--text-muted);
+}
+
+.folder-row.is-disabled:hover {
+  background-color: transparent;
+}
+
+.folder-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.folder-hint {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
 /* Buttons */
 .btn {
   font: inherit;

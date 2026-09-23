@@ -26,6 +26,9 @@ export const DEMO_ACCOUNTS: MailAccountInfo[] = [
       { accountId: 'acc-personal', path: '/INBOX', name: 'Inbox', type: 'inbox', totalSubMessages: 1840 },
       { accountId: 'acc-personal', path: '/Archives', name: 'Archives', type: 'archives', totalSubMessages: 9200 },
       { accountId: 'acc-personal', path: '/Newsletters', name: 'Newsletters', type: 'user', totalSubMessages: 430 },
+      // A sub-folder, so the settings folder picker shows its indent and its
+      // "inside an excluded folder" state without a real IMAP account.
+      { accountId: 'acc-personal', path: '/Newsletters/Tech', name: 'Tech', type: 'user', totalSubMessages: 180 },
       { accountId: 'acc-personal', path: '/Trash', name: 'Trash', type: 'trash', totalSubMessages: 120 }
     ]
   },

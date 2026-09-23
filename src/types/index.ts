@@ -97,6 +97,8 @@ export interface AppSettings {
   scanThrottleDelayMs: number;
   theme: 'auto' | 'light' | 'dark';
   ignoredDomains: string[];
+  /** Folders the user opted out of, as `accountId:path` keys (see `AccountService.folderKey`). */
+  excludedFolders: string[];
   lastScanTimestamp?: number;
 }
 
